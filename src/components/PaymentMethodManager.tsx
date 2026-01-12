@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Plus, Edit, Trash2, Save, X, ArrowLeft, CreditCard, Upload } from 'lucide-react';
-import { usePaymentMethods, PaymentMethod } from '../hooks/usePaymentMethods';
+import { Plus, Edit, Trash2, Save, X, ArrowLeft, CreditCard, Upload, ChevronDown, ChevronUp, ToggleLeft, ToggleRight } from 'lucide-react';
+import { usePaymentMethods, PaymentMethod, AdminPaymentGroup } from '../hooks/usePaymentMethods';
+import { supabase } from '../lib/supabase';
 import ImageUpload from './ImageUpload';
 
 interface PaymentMethodManagerProps {
@@ -8,9 +9,40 @@ interface PaymentMethodManagerProps {
 }
 
 const PaymentMethodManager: React.FC<PaymentMethodManagerProps> = ({ onBack }) => {
-  const { paymentMethods, addPaymentMethod, updatePaymentMethod, deletePaymentMethod, refetchAll } = usePaymentMethods();
+  const { 
+    paymentMethods, 
+    adminGroups,
+    addPaymentMethod, 
+    updatePaymentMethod, 
+    deletePaymentMethod, 
+    addAdminGroup,
+    updateAdminGroup,
+    deleteAdminGroup,
+    refetchAll,
+    refetchAdminGroups
+  } = usePaymentMethods();
+  
+  // Fetch all payment methods (not filtered by active groups) for admin view
+  const [allPaymentMethods, setAllPaymentMethods] = React.useState<PaymentMethod[]>([]);
+  
+  React.useEffect(() => {
+    const fetchAll = async () => {
+      const { data, error } = await supabase
+        .from('payment_methods')
+        .select('*')
+        .order('sort_order', { ascending: true });
+      
+      if (!error && data) {
+        setAllPaymentMethods(data);
+      }
+    };
+    fetchAll();
+  }, [paymentMethods]);
   const [currentView, setCurrentView] = useState<'list' | 'add' | 'edit'>('list');
   const [editingMethod, setEditingMethod] = useState<PaymentMethod | null>(null);
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+  const [newAdminName, setNewAdminName] = useState('');
+  const [showAddAdminForm, setShowAddAdminForm] = useState(false);
   const [formData, setFormData] = useState({
     id: '',
     name: '',
@@ -18,15 +50,87 @@ const PaymentMethodManager: React.FC<PaymentMethodManagerProps> = ({ onBack }) =
     account_name: '',
     qr_code_url: '',
     active: true,
-    sort_order: 0
+    sort_order: 0,
+    admin_name: ''
   });
 
   React.useEffect(() => {
     refetchAll();
+    refetchAdminGroups();
   }, []);
 
-  const handleAddMethod = () => {
-    const nextSortOrder = Math.max(...paymentMethods.map(m => m.sort_order), 0) + 1;
+  // Fetch all payment methods (not filtered by active groups) for admin view
+  const fetchAllPaymentMethods = React.useCallback(async () => {
+    const { data, error } = await supabase
+      .from('payment_methods')
+      .select('*')
+      .order('sort_order', { ascending: true });
+    
+    if (!error && data) {
+      setAllPaymentMethods(data);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    fetchAllPaymentMethods();
+  }, [fetchAllPaymentMethods]);
+
+  // Group payment methods by admin_name (use all payment methods, not filtered ones)
+  const groupedPaymentMethods = React.useMemo(() => {
+    const grouped: Record<string, PaymentMethod[]> = {};
+    allPaymentMethods.forEach(method => {
+      const adminName = method.admin_name || 'Unassigned';
+      if (!grouped[adminName]) {
+        grouped[adminName] = [];
+      }
+      grouped[adminName].push(method);
+    });
+    return grouped;
+  }, [allPaymentMethods]);
+
+  const handleToggleGroup = (adminName: string) => {
+    const group = adminGroups.find(g => g.admin_name === adminName);
+    if (group) {
+      updateAdminGroup(adminName, !group.is_active);
+    }
+  };
+
+  const handleAddAdminGroup = async () => {
+    if (!newAdminName.trim()) {
+      alert('Please enter an admin name');
+      return;
+    }
+    try {
+      await addAdminGroup(newAdminName.trim());
+      setNewAdminName('');
+      setShowAddAdminForm(false);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Failed to add admin group');
+    }
+  };
+
+  const handleDeleteAdminGroup = async (adminName: string) => {
+    if (confirm(`Are you sure you want to delete the admin group "${adminName}"? This will not delete the payment methods, but they will become unassigned.`)) {
+      try {
+        await deleteAdminGroup(adminName);
+      } catch (error) {
+        alert(error instanceof Error ? error.message : 'Failed to delete admin group');
+      }
+    }
+  };
+
+  const toggleGroupExpansion = (adminName: string) => {
+    setExpandedGroups(prev => ({ ...prev, [adminName]: !prev[adminName] }));
+  };
+
+  const handleAddMethod = (adminName?: string) => {
+    // Calculate sort order based on payment methods in the same admin group
+    const methodsInGroup = adminName 
+      ? allPaymentMethods.filter(m => m.admin_name === adminName)
+      : [];
+    const nextSortOrder = methodsInGroup.length > 0
+      ? Math.max(...methodsInGroup.map(m => m.sort_order), 0) + 1
+      : 1;
     setFormData({
       id: '',
       name: '',
@@ -34,7 +138,8 @@ const PaymentMethodManager: React.FC<PaymentMethodManagerProps> = ({ onBack }) =
       account_name: '',
       qr_code_url: '',
       active: true,
-      sort_order: nextSortOrder
+      sort_order: nextSortOrder,
+      admin_name: adminName || ''
     });
     setCurrentView('add');
   };
@@ -48,7 +153,8 @@ const PaymentMethodManager: React.FC<PaymentMethodManagerProps> = ({ onBack }) =
       account_name: method.account_name,
       qr_code_url: method.qr_code_url,
       active: method.active,
-      sort_order: method.sort_order
+      sort_order: method.sort_order,
+      admin_name: method.admin_name || ''
     });
     setCurrentView('edit');
   };
@@ -57,6 +163,7 @@ const PaymentMethodManager: React.FC<PaymentMethodManagerProps> = ({ onBack }) =
     if (confirm('Are you sure you want to delete this payment method?')) {
       try {
         await deletePaymentMethod(id);
+        await fetchAllPaymentMethods();
       } catch (error) {
         alert(error instanceof Error ? error.message : 'Failed to delete payment method');
       }
@@ -64,8 +171,8 @@ const PaymentMethodManager: React.FC<PaymentMethodManagerProps> = ({ onBack }) =
   };
 
   const handleSaveMethod = async () => {
-    if (!formData.id || !formData.name || !formData.account_number || !formData.account_name || !formData.qr_code_url) {
-      alert('Please fill in all required fields');
+    if (!formData.id || !formData.name || !formData.account_number || !formData.account_name || !formData.qr_code_url || !formData.admin_name) {
+      alert('Please fill in all required fields including Admin Name');
       return;
     }
 
@@ -88,6 +195,7 @@ const PaymentMethodManager: React.FC<PaymentMethodManagerProps> = ({ onBack }) =
       } else {
         await addPaymentMethod(formData);
       }
+      await fetchAllPaymentMethods();
       setCurrentView('list');
       setEditingMethod(null);
     } catch (error) {
@@ -223,6 +331,24 @@ const PaymentMethodManager: React.FC<PaymentMethodManagerProps> = ({ onBack }) =
               </div>
 
               <div>
+                <label className="block text-sm font-medium text-black mb-2">Admin Name *</label>
+                <select
+                  value={formData.admin_name}
+                  onChange={(e) => setFormData({ ...formData, admin_name: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  required
+                >
+                  <option value="">Select Admin Name</option>
+                  {adminGroups.map(group => (
+                    <option key={group.id} value={group.admin_name}>{group.admin_name}</option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  Select which admin group this payment method belongs to
+                </p>
+              </div>
+
+              <div>
                 <label className="block text-sm font-medium text-black mb-2">Sort Order</label>
                 <input
                   type="number"
@@ -270,78 +396,245 @@ const PaymentMethodManager: React.FC<PaymentMethodManagerProps> = ({ onBack }) =
               </button>
               <h1 className="text-lg md:text-2xl font-playfair font-semibold text-black">Payment Methods</h1>
             </div>
-            <button
-              onClick={handleAddMethod}
-              className="flex items-center space-x-2 bg-green-600 text-white px-3 py-1.5 md:px-4 md:py-2 rounded-lg hover:bg-green-700 transition-colors duration-200 text-sm md:text-base"
-            >
-              <Plus className="h-4 w-4" />
-              <span>Add Payment Method</span>
-            </button>
           </div>
         </div>
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-          <div className="p-4 md:p-6">
-            <h2 className="text-lg font-playfair font-medium text-black mb-4">Payment Methods</h2>
-            
-            {paymentMethods.length === 0 ? (
+        {/* Add Admin Group Section */}
+        <div className="bg-white rounded-xl shadow-sm p-4 md:p-6 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-playfair font-medium text-black">Admin Groups</h2>
+            {!showAddAdminForm && (
+              <button
+                onClick={() => setShowAddAdminForm(true)}
+                className="flex items-center space-x-2 bg-blue-600 text-white px-3 py-1.5 md:px-4 md:py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm md:text-base"
+              >
+                <Plus className="h-4 w-4" />
+                <span>Add Admin Group</span>
+              </button>
+            )}
+          </div>
+          
+          {showAddAdminForm && (
+            <div className="flex items-center space-x-2 mb-4">
+              <input
+                type="text"
+                value={newAdminName}
+                onChange={(e) => setNewAdminName(e.target.value)}
+                placeholder="Enter admin name"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    handleAddAdminGroup();
+                  }
+                }}
+              />
+              <button
+                onClick={handleAddAdminGroup}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 text-sm"
+              >
+                Add
+              </button>
+              <button
+                onClick={() => {
+                  setShowAddAdminForm(false);
+                  setNewAdminName('');
+                }}
+                className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors duration-200 text-sm"
+              >
+                Cancel
+              </button>
+            </div>
+          )}
+
+          <div className="space-y-3">
+            {adminGroups.length === 0 ? (
               <div className="text-center py-8">
                 <CreditCard className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500 mb-4">No payment methods found</p>
-                <button
-                  onClick={handleAddMethod}
-                  className="bg-green-600 text-white px-3 py-1.5 md:px-4 md:py-2 rounded-lg hover:bg-green-700 transition-colors duration-200 text-sm md:text-base"
-                >
-                  Add First Payment Method
-                </button>
+                <p className="text-gray-500 mb-4">No admin groups found. Add an admin group to get started.</p>
               </div>
             ) : (
-              <div className="space-y-4">
-                {paymentMethods.map((method) => (
+              adminGroups.map((group) => {
+                const methods = groupedPaymentMethods[group.admin_name] || [];
+                const isExpanded = expandedGroups[group.admin_name] !== false; // Default to expanded (undefined means expanded)
+                
+                return (
+                  <div key={group.id} className="border border-gray-200 rounded-lg overflow-hidden">
+                    <div className="bg-gray-50 px-4 py-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3 flex-1">
+                          <button
+                            onClick={() => toggleGroupExpansion(group.admin_name)}
+                            className="p-1 hover:bg-gray-200 rounded transition-colors"
+                          >
+                            {isExpanded ? (
+                              <ChevronUp className="h-4 w-4 text-gray-600" />
+                            ) : (
+                              <ChevronDown className="h-4 w-4 text-gray-600" />
+                            )}
+                          </button>
+                          <span className="font-medium text-black">{group.admin_name}</span>
+                          <span className="text-xs text-gray-500">
+                            ({methods.length} payment method{methods.length !== 1 ? 's' : ''})
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleToggleGroup(group.admin_name);
+                            }}
+                            className="flex items-center space-x-2"
+                          >
+                            {group.is_active ? (
+                              <ToggleRight className="h-6 w-6 text-green-600" />
+                            ) : (
+                              <ToggleLeft className="h-6 w-6 text-gray-400" />
+                            )}
+                            <span className={`text-sm font-medium ${
+                              group.is_active ? 'text-green-600' : 'text-gray-500'
+                            }`}>
+                              {group.is_active ? 'ON' : 'OFF'}
+                            </span>
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleAddMethod(group.admin_name);
+                            }}
+                            className="p-2 text-blue-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors duration-200"
+                            title="Add payment method to this group"
+                          >
+                            <Plus className="h-4 w-4" />
+                          </button>
+                          {group.admin_name !== 'Old' && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteAdminGroup(group.admin_name);
+                              }}
+                              className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors duration-200"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {isExpanded && (
+                      <div className="p-4 space-y-3 bg-white">
+                        {methods.length === 0 ? (
+                          <div className="text-center py-4">
+                            <p className="text-sm text-gray-500 mb-3">No payment methods in this group</p>
+                            <button
+                              onClick={() => handleAddMethod(group.admin_name)}
+                              className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                            >
+                              Add Payment Method
+                            </button>
+                          </div>
+                        ) : (
+                          methods.map((method) => (
+                            <div
+                              key={method.id}
+                              className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+                            >
+                              <div className="flex items-center space-x-4">
+                                <div className="flex-shrink-0">
+                                  <img
+                                    src={method.qr_code_url}
+                                    alt={`${method.name} QR Code`}
+                                    className="w-12 h-12 rounded-lg border border-gray-300 object-cover"
+                                    onError={(e) => {
+                                      e.currentTarget.src = 'https://images.pexels.com/photos/8867482/pexels-photo-8867482.jpeg?auto=compress&cs=tinysrgb&w=300&h=300&fit=crop';
+                                    }}
+                                  />
+                                </div>
+                                <div>
+                                  <h3 className="font-medium text-black text-sm">{method.name}</h3>
+                                  <p className="text-xs text-gray-600">{method.account_number}</p>
+                                  <p className="text-xs text-gray-500">Account: {method.account_name}</p>
+                                  <p className="text-xs text-gray-400">ID: {method.id} • Order: #{method.sort_order}</p>
+                                </div>
+                              </div>
+                              
+                              <div className="flex items-center space-x-2">
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                  method.active 
+                                    ? 'bg-green-100 text-green-800' 
+                                    : 'bg-red-100 text-red-800'
+                                }`}>
+                                  {method.active ? 'Active' : 'Inactive'}
+                                </span>
+                                
+                                <button
+                                  onClick={() => handleEditMethod(method)}
+                                  className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors duration-200"
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </button>
+                                
+                                <button
+                                  onClick={() => handleDeleteMethod(method.id)}
+                                  className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors duration-200"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+
+        {/* Unassigned payment methods */}
+        {groupedPaymentMethods['Unassigned'] && groupedPaymentMethods['Unassigned'].length > 0 && (
+          <div className="bg-white rounded-xl shadow-sm overflow-hidden mt-6">
+            <div className="p-4 md:p-6">
+              <h2 className="text-lg font-playfair font-medium text-black mb-4">Unassigned Payment Methods</h2>
+              <div className="space-y-3">
+                {groupedPaymentMethods['Unassigned'].map((method) => (
                   <div
                     key={method.id}
-                    className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+                    className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200"
                   >
                     <div className="flex items-center space-x-4">
                       <div className="flex-shrink-0">
                         <img
                           src={method.qr_code_url}
                           alt={`${method.name} QR Code`}
-                          className="w-16 h-16 rounded-lg border border-gray-300 object-cover"
+                          className="w-12 h-12 rounded-lg border border-gray-300 object-cover"
                           onError={(e) => {
                             e.currentTarget.src = 'https://images.pexels.com/photos/8867482/pexels-photo-8867482.jpeg?auto=compress&cs=tinysrgb&w=300&h=300&fit=crop';
                           }}
                         />
                       </div>
                       <div>
-                        <h3 className="font-medium text-black">{method.name}</h3>
-                        <p className="text-sm text-gray-600">{method.account_number}</p>
-                        <p className="text-sm text-gray-500">Account: {method.account_name}</p>
-                        <p className="text-xs text-gray-400">ID: {method.id} • Order: #{method.sort_order}</p>
+                        <h3 className="font-medium text-black text-sm">{method.name}</h3>
+                        <p className="text-xs text-gray-600">{method.account_number}</p>
+                        <p className="text-xs text-gray-500">Account: {method.account_name}</p>
                       </div>
                     </div>
                     
-                    <div className="flex items-center space-x-3">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        method.active 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-red-100 text-red-800'
-                      }`}>
-                        {method.active ? 'Active' : 'Inactive'}
-                      </span>
-                      
+                    <div className="flex items-center space-x-2">
                       <button
                         onClick={() => handleEditMethod(method)}
-                        className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors duration-200"
+                        className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors duration-200"
                       >
                         <Edit className="h-4 w-4" />
                       </button>
                       
                       <button
                         onClick={() => handleDeleteMethod(method.id)}
-                        className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors duration-200"
+                        className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors duration-200"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -349,9 +642,9 @@ const PaymentMethodManager: React.FC<PaymentMethodManagerProps> = ({ onBack }) =
                   </div>
                 ))}
               </div>
-            )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

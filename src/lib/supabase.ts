@@ -170,6 +170,7 @@ export type Database = {
           qr_code_url: string;
           active: boolean;
           sort_order: number;
+          admin_name: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -192,6 +193,30 @@ export type Database = {
           qr_code_url?: string;
           active?: boolean;
           sort_order?: number;
+          admin_name?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      admin_payment_groups: {
+        Row: {
+          id: string;
+          admin_name: string;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          admin_name: string;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          admin_name?: string;
+          is_active?: boolean;
           created_at?: string;
           updated_at?: string;
         };
