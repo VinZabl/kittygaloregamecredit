@@ -22,16 +22,19 @@ const Header: React.FC<HeaderProps> = ({ cartItemsCount, onCartClick, onMenuClic
         <div className="flex items-center justify-between min-h-12 md:min-h-16">
           <button 
             onClick={onMenuClick}
-            className="text-cafe-text hover:text-cafe-primary transition-colors duration-200 flex items-center"
+            className="text-cafe-text hover:text-cafe-primary transition-colors duration-200 flex items-center gap-3"
           >
             <img 
-              src="/image.png" 
-              alt={siteSettings?.site_name || "AmberKin x GamerXtream"}
-              className="h-10 sm:h-12 md:h-16 w-auto object-contain"
+              src="/logo.png" 
+              alt="Hatred Logo"
+              className="h-10 w-10 sm:h-12 sm:w-12 md:h-16 md:w-16 rounded-full object-cover"
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
               }}
             />
+            <span className="text-xl sm:text-2xl md:text-3xl font-bold text-cafe-text">
+              Hatred Top Up
+            </span>
           </button>
 
           <div className="flex items-center space-x-2">

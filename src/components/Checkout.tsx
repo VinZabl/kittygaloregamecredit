@@ -409,7 +409,7 @@ Please confirm this order to proceed. Thank you for choosing AmberKin! 🎮
 
     const orderDetails = generateOrderMessage();
     const encodedMessage = encodeURIComponent(orderDetails);
-    const messengerUrl = `https://m.me/AmberKinGamerXtream?text=${encodedMessage}`;
+    const messengerUrl = `https://m.me/Hatred03?text=${encodedMessage}`;
     
     window.open(messengerUrl, '_blank');
     
@@ -455,8 +455,8 @@ Please confirm this order to proceed. Thank you for choosing AmberKin! 🎮
             <form className="space-y-6">
               {/* Show count of items with custom fields */}
               {hasAnyCustomFields && itemsWithCustomFields.length > 0 && (
-                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <p className="text-sm text-blue-800">
+                <div className="mb-4 p-3 glass border border-cafe-primary/30 rounded-lg">
+                  <p className="text-sm text-cafe-text">
                     <span className="font-semibold">{itemsWithCustomFields.length}</span> game{itemsWithCustomFields.length > 1 ? 's' : ''} require{itemsWithCustomFields.length === 1 ? 's' : ''} additional information
                   </p>
                 </div>
@@ -573,7 +573,7 @@ Please confirm this order to proceed. Thank you for choosing AmberKin! 🎮
                     ? 'text-white hover:opacity-90 hover:scale-[1.02]'
                     : 'glass text-cafe-textMuted cursor-not-allowed'
                 }`}
-                style={isDetailsValid ? { backgroundColor: '#1E7ACB' } : {}}
+                style={isDetailsValid ? { backgroundColor: '#8B0000' } : {}}
               >
                 Proceed to Payment
               </button>
@@ -649,7 +649,7 @@ Please confirm this order to proceed. Thank you for choosing AmberKin! 🎮
                     ? 'border-transparent text-white'
                     : 'glass border-cafe-primary/30 text-cafe-text hover:border-cafe-primary hover:glass-strong'
                 }`}
-                style={paymentMethod === method.id ? { backgroundColor: '#1E7ACB' } : {}}
+                style={paymentMethod === method.id ? { backgroundColor: '#8B0000' } : {}}
               >
                 {/* Icon on Top */}
                 <div className="relative w-12 h-12 md:w-14 md:h-14 flex-shrink-0 rounded-lg overflow-hidden bg-gradient-to-br from-cafe-darkCard to-cafe-darkBg flex items-center justify-center">
@@ -934,7 +934,7 @@ Please confirm this order to proceed. Thank you for choosing AmberKin! 🎮
                   ? 'text-white hover:opacity-90 hover:scale-[1.02]'
                   : 'glass text-cafe-textMuted cursor-not-allowed'
               }`}
-              style={paymentMethod && receiptImageUrl && !uploadingReceipt && hasCopiedMessage ? { backgroundColor: '#1E7ACB' } : {}}
+              style={paymentMethod && receiptImageUrl && !uploadingReceipt && hasCopiedMessage ? { backgroundColor: '#8B0000' } : {}}
             >
               {uploadingReceipt ? 'Uploading Receipt...' : 'Place Order via Messenger'}
             </button>

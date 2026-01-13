@@ -75,7 +75,7 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
         onClick={handleCardClick}
         className={`flex flex-row items-center transition-all duration-300 group rounded-xl p-1.5 md:p-2 gap-1.5 md:gap-2 ${!item.available ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
         style={{
-          background: '#1E7ACB',
+          background: '#8B0000',
           boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
         }}
         onMouseEnter={(e) => {
@@ -88,7 +88,7 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
         }}
         onMouseLeave={(e) => {
           if (item.available) {
-            e.currentTarget.style.background = '#1E7ACB';
+            e.currentTarget.style.background = '#8B0000';
             e.currentTarget.style.backdropFilter = 'none';
             e.currentTarget.style.webkitBackdropFilter = 'none';
             e.currentTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
@@ -147,11 +147,11 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
       {/* Item Selection Modal */}
       {showCustomization && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowCustomization(false)}>
-          <div className="flex flex-col rounded-2xl max-w-2xl w-full max-h-[90vh] shadow-2xl overflow-hidden" style={{ background: '#0066CC' }} onClick={(e) => e.stopPropagation()}>
+          <div className="flex flex-col rounded-2xl max-w-2xl w-full max-h-[90vh] shadow-2xl overflow-hidden" style={{ background: '#5A0000' }} onClick={(e) => e.stopPropagation()}>
             <div 
               className="flex-shrink-0 p-6 flex items-center justify-between rounded-t-2xl" 
               style={{ 
-                background: '#3399FF', 
+                background: '#8B0000', 
                 zIndex: 20,
                 boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
                 borderBottom: '2px solid rgba(255, 255, 255, 0.2)'
@@ -177,7 +177,7 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
             <div 
               className="flex-1 overflow-y-auto min-h-0 relative" 
               style={{ 
-                background: '#0066CC',
+                background: '#5A0000',
                 WebkitOverflowScrolling: 'touch',
                 overscrollBehavior: 'contain'
               }}
@@ -187,7 +187,7 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
                 className="sticky top-0 left-0 right-0 z-10 pointer-events-none"
                 style={{
                   height: '32px',
-                  background: 'linear-gradient(to bottom, #0066CC 0%, rgba(0, 102, 204, 0.98) 20%, rgba(0, 102, 204, 0.7) 50%, rgba(0, 102, 204, 0.2) 80%, transparent 100%)',
+                  background: 'linear-gradient(to bottom, #5A0000 0%, rgba(90, 0, 0, 0.98) 20%, rgba(90, 0, 0, 0.7) 50%, rgba(90, 0, 0, 0.2) 80%, transparent 100%)',
                   marginBottom: '-32px'
                 }}
               />

@@ -38,7 +38,7 @@ const Cart: React.FC<CartProps> = ({
           <button
             onClick={onContinueShopping}
             className="text-white px-6 py-3 rounded-full hover:opacity-90 transition-all duration-200"
-            style={{ backgroundColor: '#1E7ACB' }}
+            style={{ backgroundColor: '#8B0000' }}
           >
             Browse Games
           </button>
@@ -144,7 +144,7 @@ const Cart: React.FC<CartProps> = ({
           <button
             onClick={onCheckout}
             className="flex-1 text-white py-4 rounded-xl hover:opacity-90 transition-all duration-200 transform hover:scale-[1.02] font-medium text-lg"
-            style={{ backgroundColor: '#1E7ACB' }}
+            style={{ backgroundColor: '#8B0000' }}
           >
             Continue to Checkout
           </button>

@@ -19,10 +19,10 @@
 }
 
 .glass-card {
-  background: rgba(10, 31, 46, 0.6);
+  background: rgba(20, 20, 20, 0.6);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(96, 165, 250, 0.3);
+  border: 1px solid rgba(139, 0, 0, 0.3);
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
 }
 
@@ -32,8 +32,8 @@
 
 .glass-hover:hover {
   background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(96, 165, 250, 0.5);
-  box-shadow: 0 8px 32px 0 rgba(96, 165, 250, 0.2);
+  border-color: rgba(139, 0, 0, 0.5);
+  box-shadow: 0 8px 32px 0 rgba(139, 0, 0, 0.2);
 }
 
 .package-card-hover {
@@ -41,9 +41,9 @@
 }
 
 .package-card-hover:hover {
-  background: #1565A8 !important;
-  border: 2px solid #1565A8 !important;
-  box-shadow: 0 4px 12px 0 rgba(21, 101, 168, 0.4) !important;
+  background: #8B0000 !important;
+  border: 2px solid #8B0000 !important;
+  box-shadow: 0 4px 12px 0 rgba(139, 0, 0, 0.4) !important;
   transform: scale(1.02) !important;
 }
 
@@ -54,29 +54,29 @@
   color: white !important;
 }
 
-/* Glow effects for in-game theme */
+/* Glow effects for Hatred theme */
 .glow-blue {
-  box-shadow: 0 0 20px rgba(96, 165, 250, 0.5);
+  box-shadow: 0 0 20px rgba(139, 0, 0, 0.5);
 }
 
 .glow-blue-strong {
-  box-shadow: 0 0 30px rgba(96, 165, 250, 0.8);
+  box-shadow: 0 0 30px rgba(139, 0, 0, 0.8);
 }
 
 /* Text glow */
 .text-glow {
-  text-shadow: 0 0 10px rgba(96, 165, 250, 0.8);
+  text-shadow: 0 0 10px rgba(139, 0, 0, 0.8);
 }
 
 /* Legacy cafe color helpers (for compatibility) */
-.bg-cafe-cream { background-color: #E0F2FE; }
-.bg-cafe-beige { background-color: #BAE6FD; }
+.bg-cafe-cream { background-color: #F5F5F5; }
+.bg-cafe-beige { background-color: #E5E5E5; }
 .bg-cafe-light { background-color: rgba(255, 255, 255, 0.1); }
-.text-cafe-accent { color: #60A5FA; }
-.text-cafe-dark { color: #E0F2FE; }
-.border-cafe-accent { border-color: #60A5FA; }
-.border-cafe-latte { border-color: rgba(96, 165, 250, 0.3); }
-.ring-cafe-accent { --tw-ring-color: #60A5FA; }
+.text-cafe-accent { color: #8B0000; }
+.text-cafe-dark { color: #F5F5F5; }
+.border-cafe-accent { border-color: #8B0000; }
+.border-cafe-latte { border-color: rgba(139, 0, 0, 0.3); }
+.ring-cafe-accent { --tw-ring-color: #8B0000; }
 
 /* Hide scrollbar for mobile nav */
 .scrollbar-hide {
