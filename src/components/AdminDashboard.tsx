@@ -3,10 +3,13 @@ import { Plus, Edit, Trash2, Save, X, ArrowLeft, TrendingUp, Package, Users, Loc
 import { MenuItem, Variation, CustomField } from '../types';
 import { useMenu } from '../hooks/useMenu';
 import { useCategories } from '../hooks/useCategories';
+import { useOrders } from '../hooks/useOrders';
+import { useSiteSettings } from '../hooks/useSiteSettings';
 import ImageUpload from './ImageUpload';
 import CategoryManager from './CategoryManager';
 import PaymentMethodManager from './PaymentMethodManager';
 import SiteSettingsManager from './SiteSettingsManager';
+import OrderManager from './OrderManager';
 import { supabase } from '../lib/supabase';
 
 const AdminDashboard: React.FC = () => {
@@ -18,7 +21,139 @@ const AdminDashboard: React.FC = () => {
   const [adminPassword, setAdminPassword] = useState<string>('AmberKin@Admin!2025'); // Default fallback
   const { menuItems, loading, addMenuItem, updateMenuItem, deleteMenuItem } = useMenu();
   const { categories } = useCategories();
-  const [currentView, setCurrentView] = useState<'dashboard' | 'items' | 'add' | 'edit' | 'categories' | 'payments' | 'settings'>('dashboard');
+  const { orders } = useOrders();
+  const { siteSettings } = useSiteSettings();
+  const [currentView, setCurrentView] = useState<'dashboard' | 'items' | 'add' | 'edit' | 'categories' | 'payments' | 'settings' | 'orders'>('dashboard');
+  
+  // Track viewed order IDs (stored in sessionStorage)
+  const [viewedOrderIds, setViewedOrderIds] = useState<Set<string>>(() => {
+    const stored = sessionStorage.getItem('viewed_order_ids');
+    return stored ? new Set(JSON.parse(stored)) : new Set();
+  });
+
+  // Save viewed order IDs to sessionStorage whenever it changes
+  useEffect(() => {
+    sessionStorage.setItem('viewed_order_ids', JSON.stringify(Array.from(viewedOrderIds)));
+  }, [viewedOrderIds]);
+
+  // Mark all current orders as viewed when entering orders view
+  useEffect(() => {
+    if (currentView === 'orders') {
+      const currentOrderIds = new Set(orders.map(order => order.id));
+      setViewedOrderIds(prev => {
+        const updated = new Set([...prev, ...currentOrderIds]);
+        return updated;
+      });
+    }
+  }, [currentView, orders]);
+
+  // Count new orders (pending or processing) that haven't been viewed
+  const newOrdersCount = orders.filter(order => 
+    (order.status === 'pending' || order.status === 'processing') && 
+    !viewedOrderIds.has(order.id)
+  ).length;
+  
+  // Track previous order count to detect new orders
+  const [previousOrderCount, setPreviousOrderCount] = useState<number | null>(null);
+  const [audioUnlocked, setAudioUnlocked] = useState(false);
+  const audioRef = React.useRef<HTMLAudioElement | null>(null);
+
+  // Debug: Log orders and newOrdersCount when they change
+  useEffect(() => {
+    console.log('📦 Orders updated:', orders.length, 'orders | New orders:', newOrdersCount);
+  }, [orders, newOrdersCount]);
+
+  // Unlock audio on first user interaction
+  useEffect(() => {
+    const unlockAudio = async () => {
+      if (audioUnlocked) return;
+      
+      try {
+        // Use the actual notification sound file but at very low volume for unlocking
+        if (!audioRef.current) {
+          audioRef.current = new Audio('/notifSound.mp3');
+          audioRef.current.volume = 0.001; // Very quiet for unlocking
+          audioRef.current.preload = 'auto';
+        }
+        
+        // Try to play the audio to unlock the context
+        const playPromise = audioRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.then(() => {
+            // Immediately pause it
+            audioRef.current?.pause();
+            audioRef.current.currentTime = 0;
+            setAudioUnlocked(true);
+            console.log('🔓 Audio unlocked successfully');
+          }).catch(() => {
+            // Audio unlock failed, will try again on next interaction
+            console.log('⚠️ Audio unlock failed, will retry on next interaction');
+          });
+        }
+      } catch (err) {
+        // Audio unlock failed, will try again on next interaction
+        console.log('⚠️ Audio unlock error:', err);
+      }
+    };
+
+    // Try to unlock on any user interaction
+    const events = ['click', 'touchstart', 'keydown'];
+    const unlockHandlers = events.map(event => {
+      const handler = () => unlockAudio();
+      document.addEventListener(event, handler, { once: true });
+      return { event, handler };
+    });
+
+    return () => {
+      unlockHandlers.forEach(({ event, handler }) => {
+        document.removeEventListener(event, handler);
+      });
+    };
+  }, [audioUnlocked]);
+
+  // Preload notification audio
+  useEffect(() => {
+    if (!audioRef.current) {
+      audioRef.current = new Audio('/notifSound.mp3');
+      audioRef.current.volume = siteSettings?.notification_volume ?? 0.5;
+      audioRef.current.preload = 'auto';
+    }
+  }, [siteSettings?.notification_volume]);
+
+  // Play notification sound when a new order arrives (works from anywhere in admin)
+  useEffect(() => {
+    // Initialize previousOrderCount on first load
+    if (previousOrderCount === null) {
+      console.log('🔔 Initializing order count:', newOrdersCount);
+      setPreviousOrderCount(newOrdersCount);
+      return;
+    }
+    
+    // Check if a new order has arrived (count increased)
+    if (newOrdersCount > previousOrderCount) {
+      console.log('🆕 New order detected! Count:', previousOrderCount, '→', newOrdersCount);
+      
+      // Play sound notification (even if audio not unlocked, try anyway)
+      if (audioRef.current) {
+        audioRef.current.volume = Math.max(0, Math.min(1, siteSettings?.notification_volume ?? 0.5));
+        audioRef.current.currentTime = 0; // Reset to start
+        audioRef.current.play().catch(err => {
+          console.warn('⚠️ Could not play notification sound:', err.message);
+          // If audio isn't unlocked yet, try to unlock and play
+          if (!audioUnlocked) {
+            console.log('🔓 Audio not unlocked, trying to unlock now...');
+            // The unlock will happen on next user interaction
+            // For now, just log that we need user interaction
+            console.log('ℹ️ Audio requires user interaction. Sound will play after first click/tap.');
+          }
+        });
+      }
+    } else if (newOrdersCount < previousOrderCount) {
+      console.log('📉 Order count decreased:', previousOrderCount, '→', newOrdersCount);
+    }
+    
+    setPreviousOrderCount(newOrdersCount);
+  }, [newOrdersCount, previousOrderCount, audioUnlocked, siteSettings?.notification_volume]);
 
   // Fetch admin password from database on mount
   useEffect(() => {
@@ -1859,6 +1994,34 @@ const AdminDashboard: React.FC = () => {
     return <PaymentMethodManager onBack={() => setCurrentView('dashboard')} />;
   }
 
+  // Orders View
+  if (currentView === 'orders') {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="bg-white shadow-sm border-b">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-16">
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={() => setCurrentView('dashboard')}
+                  className="flex items-center space-x-2 text-gray-600 hover:text-black transition-colors duration-200"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                  <span>Dashboard</span>
+                </button>
+                <h1 className="text-lg md:text-2xl font-playfair font-semibold text-black">Orders</h1>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <OrderManager />
+        </div>
+      </div>
+    );
+  }
+
   // Site Settings View
   if (currentView === 'settings') {
     return (
@@ -1997,6 +2160,18 @@ const AdminDashboard: React.FC = () => {
               >
                 <Wallet className="h-4 w-4 md:h-5 md:w-5 text-gray-400" />
                 <span className="text-sm md:text-base font-medium text-gray-900">Payment Methods</span>
+              </button>
+              <button
+                onClick={() => setCurrentView('orders')}
+                className="w-full flex items-center space-x-3 p-2 md:p-3 text-left hover:bg-gray-50 rounded-lg transition-colors duration-200 relative"
+              >
+                <ShoppingBag className="h-4 w-4 md:h-5 md:w-5 text-gray-400" />
+                <span className="text-sm md:text-base font-medium text-gray-900">Orders</span>
+                {newOrdersCount > 0 && (
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 md:h-6 md:w-6 flex items-center justify-center min-w-[20px] md:min-w-[24px] px-1 animate-pulse">
+                    {newOrdersCount > 99 ? '99+' : newOrdersCount}
+                  </span>
+                )}
               </button>
               <button
                 onClick={() => setCurrentView('settings')}

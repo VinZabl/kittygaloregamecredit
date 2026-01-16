@@ -20,12 +20,20 @@ export const useSiteSettings = () => {
       if (error) throw error;
 
       // Transform the data into a more usable format
+      const orderOptionValue = data.find(s => s.id === 'order_option')?.value || 'order_via_messenger';
       const settings: SiteSettings = {
         site_name: data.find(s => s.id === 'site_name')?.value || 'Kitty Galore Game Credits',
         site_logo: data.find(s => s.id === 'site_logo')?.value || '/logo.png',
         site_description: data.find(s => s.id === 'site_description')?.value || '',
         currency: data.find(s => s.id === 'currency')?.value || '₱',
-        currency_code: data.find(s => s.id === 'currency_code')?.value || 'PHP'
+        currency_code: data.find(s => s.id === 'currency_code')?.value || 'PHP',
+        footer_social_1: data.find(s => s.id === 'footer_social_1')?.value || '',
+        footer_social_2: data.find(s => s.id === 'footer_social_2')?.value || '',
+        footer_social_3: data.find(s => s.id === 'footer_social_3')?.value || '',
+        footer_social_4: data.find(s => s.id === 'footer_social_4')?.value || '',
+        footer_support_url: data.find(s => s.id === 'footer_support_url')?.value || '',
+        order_option: (orderOptionValue === 'place_order' ? 'place_order' : 'order_via_messenger') as 'order_via_messenger' | 'place_order',
+        notification_volume: parseFloat(data.find(s => s.id === 'notification_volume')?.value || '0.5')
       };
 
       setSiteSettings(settings);
@@ -64,7 +72,7 @@ export const useSiteSettings = () => {
       const updatePromises = Object.entries(updates).map(([key, value]) =>
         supabase
           .from('site_settings')
-          .update({ value })
+          .update({ value: typeof value === 'number' ? value.toString() : value })
           .eq('id', key)
       );
 

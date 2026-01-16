@@ -25,13 +25,15 @@ const Cart: React.FC<CartProps> = ({
     return (
       <div className="max-w-4xl mx-auto px-4 py-12">
         <div className="text-center py-16">
-          <div className="mb-4 text-6xl" style={{ 
-            imageRendering: 'pixelated',
-            filter: 'contrast(1.2)',
-            transform: 'scale(1.5)',
-            display: 'inline-block'
-          }}>
-            🦖
+          <div className="mb-4 flex justify-center">
+            <img 
+              src="/logo.png" 
+              alt="Kitty Galore Logo"
+              className="h-24 sm:h-32 md:h-40 w-auto object-contain"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+              }}
+            />
           </div>
           <h2 className="text-2xl font-medium text-cafe-text mb-2">Your cart is empty</h2>
           <p className="text-cafe-textMuted mb-6">Add some currency packages to get started!</p>
@@ -57,7 +59,7 @@ const Cart: React.FC<CartProps> = ({
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <h1 className="text-3xl font-semibold text-cafe-text whitespace-nowrap">Your Cart</h1>
+        <h1 className="text-3xl font-semibold text-cafe-text whitespace-nowrap text-center flex-1">Cart</h1>
         <button
           onClick={clearCart}
           className="text-cafe-primary hover:text-cafe-secondary transition-colors duration-200 whitespace-nowrap"

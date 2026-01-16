@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { X, XCircle } from 'lucide-react';
 import { MenuItem, Variation } from '../types';
 
 interface MenuItemCardProps {
@@ -71,28 +71,13 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
 
   return (
     <>
+      {/* Uniform vertical layout for all items: image on top, title, subtitle */}
       <div 
         onClick={handleCardClick}
-        className={`flex flex-row items-center transition-all duration-300 group rounded-xl p-1.5 md:p-2 gap-1.5 md:gap-2 ${!item.available ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
-        style={{
-          background: '#E74694',
-          boxShadow: '0 4px 6px rgba(231, 70, 148, 0.2)'
-        }}
-        onMouseEnter={(e) => {
-          if (item.available) {
-            e.currentTarget.style.background = '#F05BA8';
-            e.currentTarget.style.boxShadow = '0 8px 16px rgba(231, 70, 148, 0.3)';
-          }
-        }}
-        onMouseLeave={(e) => {
-          if (item.available) {
-            e.currentTarget.style.background = '#E74694';
-            e.currentTarget.style.boxShadow = '0 4px 6px rgba(231, 70, 148, 0.2)';
-          }
-        }}
+        className={`flex flex-col items-center transition-all duration-300 group rounded-xl overflow-hidden ${!item.available ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'} glass-card hover:glass-hover`}
       >
-        {/* Square Game Icon on Left */}
-        <div className="relative w-14 h-14 sm:w-16 sm:h-16 flex-shrink-0 rounded-lg overflow-hidden bg-gradient-to-br from-cafe-darkCard to-cafe-darkBg transition-transform duration-300 group-hover:scale-105">
+        {/* Game Image Icon on Top - corner to corner */}
+        <div className="relative w-full aspect-square overflow-hidden bg-gradient-to-br from-cafe-darkCard to-cafe-darkBg transition-transform duration-300 group-hover:scale-105">
           {item.image ? (
             <img
               src={item.image}
@@ -107,15 +92,19 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
             />
           ) : null}
           <div className={`absolute inset-0 flex items-center justify-center ${item.image ? 'hidden' : ''}`}>
-            <div className="text-4xl opacity-20 text-gray-400">🎮</div>
+            {!item.available ? (
+              <XCircle className="h-12 w-12 sm:h-16 sm:w-16 opacity-30 text-gray-400" />
+            ) : (
+              <div className="text-4xl opacity-20 text-gray-400">🎮</div>
+            )}
           </div>
         </div>
         
-        {/* Game Name and Info on Right */}
-        <div className="flex-1 overflow-hidden min-w-0">
+        {/* Game Title and Subtitle - compact padding */}
+        <div className="w-full px-2 py-1.5">
           <h4 
             ref={nameRef}
-            className={`text-white font-bold whitespace-nowrap text-base sm:text-lg mb-1 ${
+            className={`text-cafe-text font-bold text-center text-xs sm:text-sm mb-0 ${
               shouldScroll ? 'animate-scroll-text' : ''
             }`}
             style={shouldScroll ? {
@@ -132,8 +121,10 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
               item.name
             )}
           </h4>
+          
+          {/* Subtitle */}
           {item.subtitle && (
-            <p className="text-xs sm:text-sm text-gray-300">
+            <p className="text-xs text-cafe-textMuted text-center mt-0.5">
               {item.subtitle}
             </p>
           )}
@@ -143,37 +134,63 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
       {/* Item Selection Modal */}
       {showCustomization && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowCustomization(false)}>
-          <div className="flex flex-col rounded-2xl max-w-2xl w-full max-h-[90vh] shadow-2xl overflow-hidden" style={{ background: '#E74694' }} onClick={(e) => e.stopPropagation()}>
+          <div 
+            className="flex flex-col rounded-2xl max-w-2xl w-full max-h-[90vh] shadow-2xl overflow-hidden" 
+            style={{
+              background: 'rgba(255, 200, 220, 0.4)',
+              backdropFilter: 'blur(24px)',
+              WebkitBackdropFilter: 'blur(24px)',
+              border: '1.5px solid rgba(255, 182, 193, 0.5)',
+              boxShadow: '0 8px 32px 0 rgba(255, 182, 193, 0.3), 0 2px 8px 0 rgba(0, 0, 0, 0.1), inset 0 1px 0 0 rgba(255, 255, 255, 0.4)'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div 
               className="flex-shrink-0 p-6 flex items-center justify-between rounded-t-2xl" 
               style={{ 
-                background: '#E74694', 
+                background: 'rgba(255, 200, 220, 0.5)',
+                backdropFilter: 'blur(24px)',
+                WebkitBackdropFilter: 'blur(24px)',
                 zIndex: 20,
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
-                borderBottom: '2px solid rgba(255, 255, 255, 0.2)'
+                borderBottom: '1.5px solid rgba(255, 182, 193, 0.6)',
+                boxShadow: '0 2px 8px 0 rgba(0, 0, 0, 0.1)'
               }}
             >
-              <div>
-                <h3 className="text-xl font-bold text-white">{item.name}</h3>
-                {item.subtitle && (
-                  <p className="text-sm text-white/90 mt-1">{item.subtitle}</p>
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                {item.image && (
+                  <img 
+                    src={item.image} 
+                    alt={item.name}
+                    className="h-12 w-12 sm:h-14 sm:w-14 rounded-lg object-cover flex-shrink-0"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
                 )}
-                {item.description && (
-                  <p className="text-sm text-white/90 mt-2">{item.description}</p>
-                )}
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-xl font-bold text-cafe-text">{item.name}</h3>
+                  {item.subtitle && (
+                    <p className="text-sm text-cafe-textMuted mt-1">{item.subtitle}</p>
+                  )}
+                  {item.description && (
+                    <p className="text-sm text-cafe-textMuted mt-2">{item.description}</p>
+                  )}
+                </div>
               </div>
               <button
                 onClick={() => setShowCustomization(false)}
-                className="p-2 hover:bg-white/20 rounded-full transition-colors duration-200"
+                className="p-2 hover:bg-cafe-primary/20 rounded-full transition-colors duration-200 flex-shrink-0 ml-2"
               >
-                <X className="h-5 w-5 text-white" />
+                <X className="h-5 w-5 text-cafe-text" />
               </button>
             </div>
 
             <div 
               className="flex-1 overflow-y-auto min-h-0 relative" 
               style={{ 
-                background: '#E74694',
+                background: 'rgba(255, 200, 220, 0.35)',
+                backdropFilter: 'blur(24px)',
+                WebkitBackdropFilter: 'blur(24px)',
                 WebkitOverflowScrolling: 'touch',
                 overscrollBehavior: 'contain'
               }}
@@ -183,7 +200,7 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
                 className="sticky top-0 left-0 right-0 z-10 pointer-events-none"
                 style={{
                   height: '32px',
-                  background: 'linear-gradient(to bottom, #E74694 0%, rgba(231, 70, 148, 0.98) 20%, rgba(231, 70, 148, 0.7) 50%, rgba(231, 70, 148, 0.2) 80%, transparent 100%)',
+                  background: 'linear-gradient(to bottom, rgba(255, 200, 220, 0.5) 0%, rgba(255, 200, 220, 0.35) 20%, rgba(255, 200, 220, 0.2) 50%, transparent 100%)',
                   marginBottom: '-32px'
                 }}
               />
@@ -235,7 +252,7 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
                         {sortedCategories.map((category, categoryIndex) => (
                           <div key={category}>
                             {/* Category Header */}
-                            <h4 className="text-lg font-bold text-white mb-3">{category}</h4>
+                            <h4 className="text-lg font-bold text-cafe-text mb-3">{category}</h4>
                             
                             {/* Packages Grid */}
                             <div className="grid grid-cols-2 gap-3">
@@ -285,7 +302,7 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
 
                             {/* Divider between categories */}
                             {categoryIndex < sortedCategories.length - 1 && (
-                              <div className="border-t border-white/20 my-4"></div>
+                              <div className="border-t border-cafe-primary/30 my-4"></div>
                             )}
                           </div>
                         ))}
@@ -293,7 +310,7 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
                     );
                   })()
                 ) : (
-                  <div className="text-center py-8 text-white/80">
+                  <div className="text-center py-8 text-cafe-textMuted">
                     No currency packages available
                   </div>
                 )}

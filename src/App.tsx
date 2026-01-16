@@ -6,7 +6,8 @@ import SubNav from './components/SubNav';
 import Menu from './components/Menu';
 import Cart from './components/Cart';
 import Checkout from './components/Checkout';
-import FloatingCartButton from './components/FloatingCartButton';
+import FloatingSupportButton from './components/FloatingSupportButton';
+import Footer from './components/Footer';
 import AdminDashboard from './components/AdminDashboard';
 import { useMenu } from './hooks/useMenu';
 
@@ -76,7 +77,19 @@ function MainApp() {
   }, [menuItems, selectedCategory, searchQuery]);
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#FFB6C1' }}>
+    <div className="min-h-screen relative" style={{ backgroundColor: '#FFB6C1' }}>
+      {/* Background logo with 20% opacity - appears on all customer pages */}
+      <div 
+        className="fixed inset-0 flex items-center justify-center pointer-events-none z-0"
+        style={{
+          backgroundImage: 'url(/logo.png)',
+          backgroundSize: 'contain',
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'center',
+          opacity: 0.2
+        }}
+      />
+      
       <Header 
         cartItemsCount={cart.getTotalItems()}
         onCartClick={() => handleViewChange('cart')}
@@ -121,15 +134,15 @@ function MainApp() {
           cartItems={cart.cartItems}
           totalPrice={cart.getTotalPrice()}
           onBack={() => handleViewChange('cart')}
+          onNavigateToMenu={() => {
+            cart.clearCart();
+            handleViewChange('menu');
+          }}
         />
       )}
       
-      {currentView === 'menu' && (
-        <FloatingCartButton 
-          itemCount={cart.getTotalItems()}
-          onCartClick={() => handleViewChange('cart')}
-        />
-      )}
+      <FloatingSupportButton />
+      <Footer />
     </div>
   );
 }

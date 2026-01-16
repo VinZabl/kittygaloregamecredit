@@ -91,4 +91,37 @@ export interface SiteSettings {
   site_description: string;
   currency: string;
   currency_code: string;
+  // Footer social media links
+  footer_social_1?: string; // Facebook
+  footer_social_2?: string; // Instagram
+  footer_social_3?: string; // Twitter/X
+  footer_social_4?: string; // YouTube
+  footer_support_url?: string; // Customer Support
+  // Order option
+  order_option?: 'order_via_messenger' | 'place_order';
+  // Notification volume
+  notification_volume?: number;
+}
+
+// Order Types
+export type OrderStatus = 'pending' | 'processing' | 'approved' | 'rejected';
+
+export interface Order {
+  id: string;
+  order_items: CartItem[];
+  customer_info: Record<string, string | unknown>; // e.g., { "IGN": "Miki", "Payment Method": "GCash" } or { "Multiple Accounts": [...] }
+  payment_method_id: string;
+  receipt_url: string;
+  total_price: number;
+  status: OrderStatus;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateOrderData {
+  order_items: CartItem[];
+  customer_info: Record<string, string | unknown>;
+  payment_method_id: string;
+  receipt_url: string;
+  total_price: number;
 }

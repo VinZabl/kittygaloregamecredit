@@ -12,7 +12,14 @@ const SiteSettingsManager: React.FC = () => {
     site_name: '',
     site_description: '',
     currency: '',
-    currency_code: ''
+    currency_code: '',
+    footer_social_1: '',
+    footer_social_2: '',
+    footer_social_3: '',
+    footer_social_4: '',
+    footer_support_url: '',
+    order_option: 'order_via_messenger' as 'order_via_messenger' | 'place_order',
+    notification_volume: 0.5
   });
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string>('');
@@ -39,17 +46,24 @@ const SiteSettingsManager: React.FC = () => {
         site_name: siteSettings.site_name,
         site_description: siteSettings.site_description,
         currency: siteSettings.currency,
-        currency_code: siteSettings.currency_code
+        currency_code: siteSettings.currency_code,
+        footer_social_1: siteSettings.footer_social_1 || '',
+        footer_social_2: siteSettings.footer_social_2 || '',
+        footer_social_3: siteSettings.footer_social_3 || '',
+        footer_social_4: siteSettings.footer_social_4 || '',
+        footer_support_url: siteSettings.footer_support_url || '',
+        order_option: siteSettings.order_option || 'order_via_messenger',
+        notification_volume: siteSettings.notification_volume ?? 0.5
       });
       setLogoPreview(siteSettings.site_logo);
     }
   }, [siteSettings]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: type === 'number' ? parseFloat(value) || 0 : value
     }));
   };
 
@@ -80,7 +94,14 @@ const SiteSettingsManager: React.FC = () => {
         site_name: formData.site_name,
         currency: formData.currency,
         currency_code: formData.currency_code,
-        site_logo: logoUrl
+        site_logo: logoUrl,
+        footer_social_1: formData.footer_social_1,
+        footer_social_2: formData.footer_social_2,
+        footer_social_3: formData.footer_social_3,
+        footer_social_4: formData.footer_social_4,
+        footer_support_url: formData.footer_support_url,
+        order_option: formData.order_option,
+        notification_volume: formData.notification_volume
       });
 
       setIsEditing(false);
@@ -96,7 +117,14 @@ const SiteSettingsManager: React.FC = () => {
         site_name: siteSettings.site_name,
         site_description: siteSettings.site_description,
         currency: siteSettings.currency,
-        currency_code: siteSettings.currency_code
+        currency_code: siteSettings.currency_code,
+        footer_social_1: siteSettings.footer_social_1 || '',
+        footer_social_2: siteSettings.footer_social_2 || '',
+        footer_social_3: siteSettings.footer_social_3 || '',
+        footer_social_4: siteSettings.footer_social_4 || '',
+        footer_support_url: siteSettings.footer_support_url || '',
+        order_option: siteSettings.order_option || 'order_via_messenger',
+        notification_volume: siteSettings.notification_volume ?? 0.5
       });
       setLogoPreview(siteSettings.site_logo);
     }
@@ -342,6 +370,155 @@ const SiteSettingsManager: React.FC = () => {
             ) : (
               <p className="text-lg font-medium text-black">{siteSettings?.currency_code}</p>
             )}
+          </div>
+        </div>
+
+        {/* Footer Social Media Links */}
+        <div className="border-t border-gray-200 pt-6 mt-6">
+          <h3 className="text-lg font-semibold text-black mb-4">Footer Social Media Links</h3>
+          <p className="text-sm text-gray-600 mb-4">
+            Add your social media URLs to display them as icons in the footer. Leave blank to hide an icon.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Social Media Link 1 (Facebook)</label>
+              {isEditing ? (
+                <input
+                  type="url"
+                  name="footer_social_1"
+                  value={formData.footer_social_1}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                  placeholder="https://facebook.com/yourpage"
+                />
+              ) : (
+                <p className="text-gray-600 break-all">{siteSettings?.footer_social_1 || '-'}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Social Media Link 2 (Instagram)</label>
+              {isEditing ? (
+                <input
+                  type="url"
+                  name="footer_social_2"
+                  value={formData.footer_social_2}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                  placeholder="https://instagram.com/yourhandle"
+                />
+              ) : (
+                <p className="text-gray-600 break-all">{siteSettings?.footer_social_2 || '-'}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Social Media Link 3 (Twitter/X)</label>
+              {isEditing ? (
+                <input
+                  type="url"
+                  name="footer_social_3"
+                  value={formData.footer_social_3}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                  placeholder="https://x.com/yourhandle"
+                />
+              ) : (
+                <p className="text-gray-600 break-all">{siteSettings?.footer_social_3 || '-'}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Social Media Link 4 (YouTube)</label>
+              {isEditing ? (
+                <input
+                  type="url"
+                  name="footer_social_4"
+                  value={formData.footer_social_4}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                  placeholder="https://youtube.com/@yourchannel"
+                />
+              ) : (
+                <p className="text-gray-600 break-all">{siteSettings?.footer_social_4 || '-'}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Customer Support URL</label>
+              {isEditing ? (
+                <input
+                  type="url"
+                  name="footer_support_url"
+                  value={formData.footer_support_url}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                  placeholder="https://yourwebsite.com/support or tel:+1234567890"
+                />
+              ) : (
+                <p className="text-gray-600 break-all">{siteSettings?.footer_support_url || '-'}</p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Order Option */}
+        <div className="border-t border-gray-200 pt-6 mt-6">
+          <h3 className="text-lg font-semibold text-black mb-4">Order Option</h3>
+          <p className="text-sm text-gray-600 mb-4">
+            Choose how customers can place orders. "Order via Messenger" shows receipt upload, copy message, and messenger button. "Place Order" shows only receipt upload and place order button.
+          </p>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Order Method
+              </label>
+              {isEditing ? (
+                <select
+                  name="order_option"
+                  value={formData.order_option}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                >
+                  <option value="order_via_messenger">Order via Messenger</option>
+                  <option value="place_order">Place Order</option>
+                </select>
+              ) : (
+                <p className="text-gray-600">
+                  {siteSettings?.order_option === 'place_order' ? 'Place Order' : 'Order via Messenger'}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Notification Volume */}
+        <div className="border-t border-gray-200 pt-6 mt-6">
+          <h3 className="text-lg font-semibold text-black mb-4">Notification Settings</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Notification Volume (0.0 - 1.0)
+              </label>
+              {isEditing ? (
+                <input
+                  type="number"
+                  name="notification_volume"
+                  min="0"
+                  max="1"
+                  step="0.1"
+                  value={formData.notification_volume}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                />
+              ) : (
+                <p className="text-gray-600">
+                  {siteSettings?.notification_volume ?? 0.5}
+                </p>
+              )}
+            </div>
           </div>
         </div>
 
