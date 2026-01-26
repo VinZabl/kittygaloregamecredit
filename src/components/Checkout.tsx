@@ -247,11 +247,12 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onNa
       // Group games by their field values (to simplify when bulk input is used)
       const gamesByFieldValues = new Map<string, { games: string[], fields: Array<{ label: string, value: string }> }>();
       
-      itemsWithCustomFields.forEach(item => {
+      itemsWithCustomFields.forEach((item, itemIndex) => {
         // Get all field values for this game (use original menu item ID)
         const originalId = getOriginalMenuItemId(item.id);
-        const fields = item.customFields?.map(field => {
-          const valueKey = `${originalId}_${field.key}`;
+        const fields = item.customFields?.map((field, fieldIndex) => {
+          // Match the key format used when storing values: ${originalId}_${fieldIndex}_${field.key}
+          const valueKey = `${originalId}_${fieldIndex}_${field.key}`;
           const value = customFieldValues[valueKey] || '';
           return value ? { label: field.label, value } : null;
         }).filter(Boolean) as Array<{ label: string, value: string }> || [];
@@ -315,9 +316,9 @@ ${cartItems.map(item => {
 
 💰 TOTAL: ₱${totalPrice}
 
-💳 Payment: ${selectedPaymentMethod?.name || ''}
+💳 Payment: ${selectedPaymentMethod?.name || 'Not selected'}
 
-📸 Payment Receipt: ${receiptImageUrl || ''}
+📸 Payment Receipt: ${receiptImageUrl || 'Not uploaded'}
 
 Please confirm this order to proceed. Thank you for choosing Kitty Galore Game Credits! 🎮
     `.trim();

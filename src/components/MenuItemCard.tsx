@@ -133,7 +133,7 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
 
       {/* Item Selection Modal */}
       {showCustomization && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowCustomization(false)}>
+        <div className="fixed inset-0 backdrop-blur-md flex items-center justify-center z-50 p-4" onClick={() => setShowCustomization(false)}>
           <div 
             className="flex flex-col rounded-2xl max-w-2xl w-full max-h-[90vh] shadow-2xl overflow-hidden" 
             style={{
